@@ -4,6 +4,14 @@
 
 This Android application is a personal weight tracking tool designed to help users monitor their weight, set goals, and visualize their progress. It offers a clean, user-friendly interface built with modern Android design principles, coupled with robust backend functionality for data persistence and personalized user features.
 
+## DEMO
+
+
+
+https://github.com/user-attachments/assets/30acdcbd-3165-450f-888d-5c5be4976828
+
+
+
 ## Features
 
 *   **User Authentication:**
