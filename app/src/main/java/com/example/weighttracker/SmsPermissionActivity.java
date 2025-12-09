@@ -3,6 +3,7 @@ package com.example.weighttracker;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -44,10 +45,12 @@ public class SmsPermissionActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Update permission status when the activity resumes
         if (checkSmsPermission()) {
             permissionStatusTextView.setText("Permission Status: Granted");
         } else {
             permissionStatusTextView.setText("Permission Status: Denied");
+            // Automatically request permission if not granted
             requestSmsPermission();
         }
     }

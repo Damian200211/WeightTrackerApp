@@ -5,7 +5,7 @@
         android:id="@+id/action_graph"
         android:enabled="true"
         android:icon="@drawable/ic_graph"
-        android:title="Graph"
+        android:title="Weight History"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_settings"

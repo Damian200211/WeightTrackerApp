@@ -8,11 +8,17 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class AddWeightActivity extends AppCompatActivity {
 
     private EditText etWeightInput;
     private Button btnSaveWeight;
+    private DatabaseHelper databaseHelper;
+    private int currentUserId; // To store the ID of the logged-in user
+    private int weightEntryId = -1; // -1 if adding new, otherwise ID of entry being edited
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,10 +33,22 @@ public class AddWeightActivity extends AppCompatActivity {
         etWeightInput = findViewById(R.id.etWeightInput);
         btnSaveWeight = findViewById(R.id.btnSaveWeight);
 
-        // Check if there is a weight value passed to the activity
-        if (getIntent().hasExtra("weight")) {
+        databaseHelper = new DatabaseHelper(this);
+
+        // Get the USER_ID passed from GridActivity
+        currentUserId = getIntent().getIntExtra("USER_ID", -1);
+        if (currentUserId == -1) {
+            Toast.makeText(this, "User not logged in.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Check if there is a weight value passed to the activity (for editing)
+        if (getIntent().hasExtra("weightId") && getIntent().hasExtra("weight")) {
+            weightEntryId = getIntent().getIntExtra("weightId", -1);
             String weight = getIntent().getStringExtra("weight");
             etWeightInput.setText(weight);
+            getSupportActionBar().setTitle("Edit Weight");
         }
 
         btnSaveWeight.setOnClickListener(new View.OnClickListener() {
@@ -38,11 +56,30 @@ public class AddWeightActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String weightStr = etWeightInput.getText().toString();
                 if (!weightStr.isEmpty()) {
-                    // For Project Two, we just simulate saving and go back
-                    Toast.makeText(AddWeightActivity.this, "Weight Saved: " + weightStr, Toast.LENGTH_SHORT).show();
-                    finish(); // Closes activity and returns to GridActivity
+                    float weightValue = Float.parseFloat(weightStr);
+                    String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+                    boolean success;
+                    if (weightEntryId != -1) {
+                        // Update existing weight entry
+                        success = databaseHelper.updateWeight(weightEntryId, currentDate, weightValue) > 0;
+                        if (success) {
+                            Toast.makeText(AddWeightActivity.this, "Weight Updated: " + weightStr, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(AddWeightActivity.this, "Failed to update weight.", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        // Add new weight entry
+                        success = databaseHelper.addWeight(currentDate, weightValue, currentUserId);
+                        if (success) {
+                            Toast.makeText(AddWeightActivity.this, "Weight Saved: " + weightStr, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(AddWeightActivity.this, "Failed to save weight.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    finish(); // Closes activity and returns to previous activity
                 } else {
-                    Toast.makeText(AddWeightActivity.this, "Please enter a value", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddWeightActivity.this, "Please enter a weight value", Toast.LENGTH_SHORT).show();
                 }
             }
         });
