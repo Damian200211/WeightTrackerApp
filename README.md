@@ -66,9 +66,6 @@ To set up and run this project locally, please follow these steps:
     *   Select an Android Emulator or connect a physical Android device.
     *   Click the `Run` button (green triangle) in the toolbar to deploy the application.
 
-## Contributing
-
-We welcome contributions! If you wish to contribute, please fork the repository, make your changes, and submit a pull request.
 
 ## License
 
