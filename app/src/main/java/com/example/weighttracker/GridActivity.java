@@ -122,17 +122,34 @@ public class GridActivity extends AppCompatActivity {
 
                 // Progress calculation for progress bar
                 int progress = 0;
-                WeightModel firstWeightEntry = null;
-                if (!userWeights.isEmpty()) {
-                    firstWeightEntry = userWeights.get(0);
-                }
+                if (userWeights.size() == 1) {
+                    // If only one entry, progress is 100% if goal is met, else 0%
+                    if (currentWeight <= goalWeight) { // Assuming losing weight or maintaining
+                        progress = 100; // Goal met with the first entry
+                    } else {
+                        // If first entry is above goal, progress starts at 0% towards goal
+                        progress = 0; 
+                    }
+                } else { 
+                    // For multiple entries, calculate progress relative to the first entry and goal
+                    float startWeight = userWeights.get(0).getWeight();
 
-                if (firstWeightEntry != null && currentWeight != firstWeightEntry.getWeight()) {
-                    float startWeight = firstWeightEntry.getWeight();
-                    if (startWeight > goalWeight) { // User is trying to lose weight
-                        progress = (int) ((startWeight - currentWeight) / (startWeight - goalWeight) * 100);
-                    } else if (startWeight < goalWeight) { // User is trying to gain weight
-                        progress = (int) ((currentWeight - startWeight) / (goalWeight - startWeight) * 100);
+                    if (startWeight == goalWeight) {
+                        progress = 100; // Already at goal initially
+                    } else if (startWeight > goalWeight) { // User is trying to lose weight
+                        // Avoid division by zero if startWeight == goalWeight in this branch
+                        if (startWeight - goalWeight > 0) {
+                             progress = (int) (((startWeight - currentWeight) / (startWeight - goalWeight)) * 100);
+                        } else {
+                             progress = currentWeight <= goalWeight ? 100 : 0;
+                        }
+                    } else { // startWeight < goalWeight, User is trying to gain weight
+                        // Avoid division by zero if goalWeight == startWeight in this branch
+                        if (goalWeight - startWeight > 0) {
+                            progress = (int) (((currentWeight - startWeight) / (goalWeight - startWeight)) * 100);
+                        } else {
+                            progress = currentWeight >= goalWeight ? 100 : 0;
+                        }
                     }
                 }
 
@@ -163,6 +180,9 @@ public class GridActivity extends AppCompatActivity {
                 dataPoints[i] = new DataPoint(i, userWeights.get(i).getWeight());
             }
             LineGraphSeries<DataPoint> series = new LineGraphSeries<>(dataPoints);
+            // Ensure data points are drawn so a single point is visible
+            series.setDrawDataPoints(true);
+            series.setDataPointsRadius(10f);
             graphView.addSeries(series);
             customizeGraph(userWeights);
         } else {
@@ -181,9 +201,19 @@ public class GridActivity extends AppCompatActivity {
     private void customizeGraph(List<WeightModel> userWeights) {
         // Set the bounds of the graph's viewport
         graphView.getViewport().setXAxisBoundsManual(true);
-        graphView.getViewport().setMinX(0);
-        // Set max X based on number of data points to ensure all are visible
-        graphView.getViewport().setMaxX(Math.max(1, userWeights.size() - 1));
+
+        if (userWeights.size() > 1) {
+            graphView.getViewport().setMinX(0);
+            graphView.getViewport().setMaxX(userWeights.size() - 1);
+        } else if (userWeights.size() == 1) {
+            // For a single point, center it and give a small range for visibility
+            graphView.getViewport().setMinX(-0.5);
+            graphView.getViewport().setMaxX(0.5);
+        } else {
+            // Default range if no data
+            graphView.getViewport().setMinX(0);
+            graphView.getViewport().setMaxX(1);
+        }
 
         graphView.getViewport().setYAxisBoundsManual(true);
         // Dynamically set min/max Y based on actual data to make the graph scale appropriately

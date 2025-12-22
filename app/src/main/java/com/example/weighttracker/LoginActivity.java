@@ -8,6 +8,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * Activity for user login and registration. Handles user authentication
+ * against a local SQLite database.
+ */
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etUsername, etPassword;
@@ -19,58 +23,59 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // Initialize UI elements
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
 
+        // Initialize database helper
         databaseHelper = new DatabaseHelper(this);
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String user = etUsername.getText().toString();
-                String pass = etPassword.getText().toString();
+        // Set OnClickListener for the Login button
+        btnLogin.setOnClickListener(v -> {
+            String user = etUsername.getText().toString();
+            String pass = etPassword.getText().toString();
 
-                if(user.isEmpty() || pass.isEmpty()) {
-                    Toast.makeText(LoginActivity.this, "Please enter credentials", Toast.LENGTH_SHORT).show();
+            if (user.isEmpty() || pass.isEmpty()) {
+                Toast.makeText(LoginActivity.this, "Please enter credentials", Toast.LENGTH_SHORT).show();
+            } else {
+                // Check user credentials against the database
+                int userId = databaseHelper.checkUser(user, pass);
+                if (userId != -1) {
+                    Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                    // Navigate to GridActivity on successful login, passing the user ID
+                    Intent intent = new Intent(LoginActivity.this, GridActivity.class);
+                    intent.putExtra("USER_ID", userId);
+                    startActivity(intent);
+                    finish(); // Close LoginActivity to prevent returning with back button
                 } else {
-                    int userId = databaseHelper.checkUser(user, pass);
-                    if (userId != -1) {
-                        Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, GridActivity.class);
-                        intent.putExtra("USER_ID", userId); // Pass user ID to the next activity
-                        startActivity(intent);
-                        finish(); // Finish LoginActivity so user can't go back with back button
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
-                    }
+                    Toast.makeText(LoginActivity.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String user = etUsername.getText().toString();
-                String pass = etPassword.getText().toString();
+        // Set OnClickListener for the Register button
+        btnRegister.setOnClickListener(v -> {
+            String user = etUsername.getText().toString();
+            String pass = etPassword.getText().toString();
 
-                if(user.isEmpty() || pass.isEmpty()) {
-                    Toast.makeText(LoginActivity.this, "Please enter credentials", Toast.LENGTH_SHORT).show();
-                } else {
-                    if (databaseHelper.addUser(user, pass)) {
-                        Toast.makeText(LoginActivity.this, "Registration successful! Please log in.", Toast.LENGTH_SHORT).show();
-                        // Optionally, auto-login the user or navigate to GridActivity
-                        int userId = databaseHelper.checkUser(user, pass);
-                        if (userId != -1) {
-                            Intent intent = new Intent(LoginActivity.this, GridActivity.class);
-                            intent.putExtra("USER_ID", userId);
-                            startActivity(intent);
-                            finish();
-                        }
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Registration failed. Username might exist.", Toast.LENGTH_SHORT).show();
+            if (user.isEmpty() || pass.isEmpty()) {
+                Toast.makeText(LoginActivity.this, "Please enter credentials", Toast.LENGTH_SHORT).show();
+            } else {
+                // Add new user to the database
+                if (databaseHelper.addUser(user, pass)) {
+                    Toast.makeText(LoginActivity.this, "Registration successful! Please log in.", Toast.LENGTH_SHORT).show();
+                    // Optionally, auto-login and navigate after successful registration
+                    int userId = databaseHelper.checkUser(user, pass);
+                    if (userId != -1) {
+                        Intent intent = new Intent(LoginActivity.this, GridActivity.class);
+                        intent.putExtra("USER_ID", userId);
+                        startActivity(intent);
+                        finish();
                     }
+                } else {
+                    Toast.makeText(LoginActivity.this, "Registration failed. Username might already exist.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
